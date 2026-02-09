@@ -1,0 +1,39 @@
+{
+  "name": "playwright-typescript-vb-bank",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "test:debug": "npx playwright test --debug",
+    "test:auth": "npx playwright test --project=auth",
+    "test:user": "npx playwright test --project=chromium",
+    "test:admin": "npx playwright test --project=admin",
+    "test:api": "npx playwright test --project=api",
+    "test:api:auth": "npx playwright test --project=api src/tests/api/auth.api.spec.ts",
+    "test:api:account": "npx playwright test --project=api src/tests/api/account.api.spec.ts",
+    "test:api:transfer": "npx playwright test --project=api src/tests/api/transfer.api.spec.ts",
+    "test:api:admin": "npx playwright test --project=api src/tests/api/admin.api.spec.ts",
+    "test:smoke": "npx playwright test --grep @smoke",
+    "test:regression": "npx playwright test --grep @regression",
+    "test:e2e": "npx playwright test --grep @e2e",
+    "test:ui-only": "npx playwright test --project=chromium --project=admin --project=auth",
+    "test:api-only": "npx playwright test --grep @api",
+    "report": "npx playwright show-report",
+    "test:ci": "npx playwright test --reporter=dot",
+    "test:ci:smoke": "npx playwright test --grep @smoke --reporter=dot",
+    "test:ci:regression": "npx playwright test --grep @regression --reporter=dot"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.58.1",
+    "@types/node": "^25.2.1",
+    "dotenv": "^17.2.4",
+    "typescript": "^5.9.3"
+  }
+}

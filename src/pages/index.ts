@@ -1,0 +1,16 @@
+// ============================================
+// Page Object Barrel Export
+// ============================================
+export { BasePage } from './base.page';
+export { LoginPage } from './login.page';
+export { RegisterPage } from './register.page';
+export { DashboardPage } from './dashboard.page';
+export { TransferPage } from './transfer.page';
+export { HistoryPage } from './history.page';
+export { TopUpPage } from './topup.page';
+export { BillPayPage } from './billpay.page';
+export { LoanPage } from './loan.page';
+export { SettingsPage } from './settings.page';
+export { AdminDashboardPage } from './admin-dashboard.page';
+export { UserManagementPage } from './user-management.page';
+export { NavigationComponent } from './components/navigation.component';
