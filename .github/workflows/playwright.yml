@@ -80,7 +80,7 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run E2E tests
-        run: npx playwright test --grep @e2e --reporter=dot
+        run: npm run test:ci -- --grep "@e2e"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -148,7 +148,7 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run API tests
-        run: npx playwright test --grep @api --reporter=dot
+        run: npm run test:ci -- --grep "@api"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
