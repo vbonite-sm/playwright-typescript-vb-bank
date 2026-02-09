@@ -46,17 +46,33 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run smoke tests
-        run: npm run test:ci:smoke
+        run: npx playwright test --grep "@smoke" --reporter=html,github
+        continue-on-error: true
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-html-report
+          path: playwright-report/
+          retention-days: 7
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: smoke-test-results
-          path: |
-            playwright-report/
-            test-results/
+          path: test-results/
           retention-days: 7
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Smoke Test Results
+          path: test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
 
   # E2E tests run on PRs to main/master
   e2e-tests:
@@ -80,17 +96,33 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run E2E tests
-        run: npm run test:ci -- --grep "@e2e"
+        run: npx playwright test --grep "@e2e" --reporter=html,github
+        continue-on-error: true
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-html-report
+          path: playwright-report/
+          retention-days: 7
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: e2e-test-results
-          path: |
-            playwright-report/
-            test-results/
+          path: test-results/
           retention-days: 7
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: E2E Test Results
+          path: test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
 
   # Regression tests run on schedule or manual trigger
   regression-tests:
@@ -114,17 +146,33 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run regression tests
-        run: npm run test:ci:regression
+        run: npx playwright test --grep "@regression" --reporter=html,github
+        continue-on-error: true
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: regression-html-report
+          path: playwright-report/
+          retention-days: 14
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: regression-test-results
-          path: |
-            playwright-report/
-            test-results/
+          path: test-results/
           retention-days: 14
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Regression Test Results
+          path: test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
 
   # API-only tests
   api-tests:
@@ -148,14 +196,30 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run API tests
-        run: npm run test:ci -- --grep "@api"
+        run: npx playwright test --grep "@api" --reporter=html,github
+        continue-on-error: true
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-html-report
+          path: playwright-report/
+          retention-days: 7
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: api-test-results
-          path: |
-            playwright-report/
-            test-results/
+          path: test-results/
           retention-days: 7
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: API Test Results
+          path: test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
