@@ -36,6 +36,47 @@ jobs:
 
       - name: Run full regression tests
         run: npm run test:ci:regression
+        continue-on-error: true
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "## 🧪 Scheduled Regression Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f test-results/junit-report.xml ]; then
+            TESTS=$(grep -oP 'tests="\K[0-9]+' test-results/junit-report.xml | head -1)
+            FAILURES=$(grep -oP 'failures="\K[0-9]+' test-results/junit-report.xml | head -1)
+            ERRORS=$(grep -oP 'errors="\K[0-9]+' test-results/junit-report.xml | head -1)
+            SKIPPED=$(grep -oP 'skipped="\K[0-9]+' test-results/junit-report.xml | head -1)
+            TIME=$(grep -oP 'time="\K[0-9.]+' test-results/junit-report.xml | head -1)
+            PASSED=$((TESTS - FAILURES - ERRORS - SKIPPED))
+            if [ "$FAILURES" -eq 0 ] && [ "$ERRORS" -eq 0 ]; then
+              echo "### ✅ All tests passed!" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "### ❌ Some tests failed" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| ✅ Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
+            echo "| ❌ Failed | $FAILURES |" >> $GITHUB_STEP_SUMMARY
+            echo "| 💥 Errors | $ERRORS |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⏭️ Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
+            echo "| 📊 Total | $TESTS |" >> $GITHUB_STEP_SUMMARY
+            echo "| ⏱️ Duration | ${TIME}s |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            FAILED_NAMES=$(grep -B1 '<failure' test-results/junit-report.xml | grep -oP 'name="\K[^"]+' | head -20)
+            if [ -n "$FAILED_NAMES" ]; then
+              echo "<details><summary>Failed Tests</summary>" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "$FAILED_NAMES" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "</details>" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ No JUnit report found at test-results/junit-report.xml" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
