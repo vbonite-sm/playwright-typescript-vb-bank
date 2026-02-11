@@ -17,6 +17,7 @@ export default defineConfig({
     ['html', { open: 'never' }],
     ['junit', { outputFile: 'test-results/junit-report.xml' }],
     ['./src/reporters/json-log.reporter.ts'],
+    ...(process.env.CI ? [['github'] as const] : []),
   ],
 
   use: {

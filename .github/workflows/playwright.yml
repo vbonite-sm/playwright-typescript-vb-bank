@@ -46,7 +46,7 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run smoke tests
-        run: npx playwright test --grep "@smoke" --reporter=html,github
+        run: npx playwright test --grep "@smoke"
         continue-on-error: true
 
       - name: Upload HTML report
@@ -96,7 +96,7 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run E2E tests
-        run: npx playwright test --grep "@e2e" --reporter=html,github
+        run: npx playwright test --grep "@e2e"
         continue-on-error: true
 
       - name: Upload HTML report
@@ -146,7 +146,7 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run regression tests
-        run: npx playwright test --grep "@regression" --reporter=html,github
+        run: npx playwright test --grep "@regression"
         continue-on-error: true
 
       - name: Upload HTML report
@@ -196,7 +196,7 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run API tests
-        run: npx playwright test --grep "@api" --reporter=html,github
+        run: npx playwright test --grep "@api"
         continue-on-error: true
 
       - name: Upload HTML report
