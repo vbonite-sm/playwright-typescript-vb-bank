@@ -7,3 +7,4 @@ blob-report/
 *.env.local
 playwright/.cache/
 storage-state/
+test-logs/

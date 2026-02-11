@@ -1,13 +1,7 @@
-// ============================================
-// API Client for VB Bank using globalThis.__API__
-// ============================================
-// Calls the app's exposed API directly via page.evaluate()
-// This ensures API tests use the same mock layer as the UI.
-// Note: globalThis.__API__ usage is intentional for mock API testing
 // sonar-disable-file sonarjs/prefer-globalthis
-// ============================================
 
 import { Page } from '@playwright/test';
+import { createLogger } from '../../helpers/logger';
 
 // Response structure from globalThis.__API__
 export interface ApiResponse<T = unknown> {
@@ -289,18 +283,18 @@ declare global {
 export class ApiClient {
   private readonly page: Page;
   private userId: string | null = null;
+  private readonly log = createLogger('ApiClient');
 
   constructor(page: Page) {
     this.page = page;
   }
-
-  // ----- Initialization -----
 
   /**
    * Navigates to the app and waits for __API__ to be available.
    * Must be called once before making any API requests.
    */
   async init(): Promise<void> {
+    this.log.info('Initializing API client');
     await this.page.goto('/');
     await this.page.waitForFunction(
       // eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error, @typescript-eslint/ban-ts-comment
@@ -315,9 +309,7 @@ export class ApiClient {
     return this.userId;
   }
 
-  // ============================================
-  // AUTH API
-  // ============================================
+  // Auth
 
   async login(username: string, password: string): Promise<ApiResponse<AuthData>> {
     const response = await this.page.evaluate(
@@ -328,6 +320,7 @@ export class ApiClient {
     );
     
     if (response.success) {
+      this.log.info('Login successful', { username });
       // Get userId from response or localStorage session
       if (response.data?.userId) {
         this.userId = response.data.userId;
@@ -367,9 +360,7 @@ export class ApiClient {
     return response;
   }
 
-  // ============================================
-  // BANK API
-  // ============================================
+  // Bank
 
   async getBalance(userId?: string): Promise<ApiResponse<BalanceData>> {
     const id = userId ?? this.userId;
@@ -447,9 +438,7 @@ export class ApiClient {
     );
   }
 
-  // ============================================
-  // ADMIN API
-  // ============================================
+  // Admin
 
   async adminGetSystemStats(): Promise<ApiResponse<SystemStats>> {
     return this.page.evaluate(async () => {
@@ -508,9 +497,7 @@ export class ApiClient {
     );
   }
 
-  // ============================================
-  // EXTENDED AUTH API
-  // ============================================
+  // Extended Auth
 
   async getSession(): Promise<ApiResponse<SessionData>> {
     return this.page.evaluate(async () => {
@@ -524,9 +511,7 @@ export class ApiClient {
     });
   }
 
-  // ============================================
-  // EXTENDED BANK API
-  // ============================================
+  // Extended Bank
 
   async getAccountDetails(userId?: string): Promise<ApiResponse<AccountDetails>> {
     const id = userId ?? this.userId;
@@ -617,9 +602,7 @@ export class ApiClient {
     );
   }
 
-  // ============================================
-  // CARDS API
-  // ============================================
+  // Cards
 
   async getCards(userId?: string): Promise<ApiResponse<Card[]>> {
     const id = userId ?? this.userId;
@@ -681,9 +664,7 @@ export class ApiClient {
     );
   }
 
-  // ============================================
-  // LOANS EXTENDED
-  // ============================================
+  // Loans
 
   async getLoanApplications(userId?: string): Promise<ApiResponse<LoanApplication[]>> {
     const id = userId ?? this.userId;
@@ -697,9 +678,7 @@ export class ApiClient {
     );
   }
 
-  // ============================================
-  // PROFILE API
-  // ============================================
+  // Profile
 
   async updateProfile(updates: ProfileUpdate, userId?: string): Promise<ApiResponse<UserProfile>> {
     const id = userId ?? this.userId;
@@ -728,10 +707,6 @@ export class ApiClient {
       [id, currentPassword, newPassword] as const
     );
   }
-
-  // ============================================
-  // HELPER: Clear auth state
-  // ============================================
 
   async clearAuth(): Promise<void> {
     await this.page.evaluate(() => {

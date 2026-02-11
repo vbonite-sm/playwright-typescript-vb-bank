@@ -1,11 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
-/**
- * HistoryPage - Page Object for Transaction History screen.
- */
 export class HistoryPage extends BasePage {
-  // ----- Locators -----
   readonly filterAll: Locator;
   readonly filterIncome: Locator;
   readonly filterExpense: Locator;
@@ -31,7 +27,6 @@ export class HistoryPage extends BasePage {
     this.exportCsvButton = page.getByTestId('btn-export-csv');
   }
 
-  // ----- Actions -----
   async goto(): Promise<void> {
     await this.navigateTo('/history');
   }
@@ -74,7 +69,6 @@ export class HistoryPage extends BasePage {
     return this.page.getByTestId(`transaction-row-${index}`);
   }
 
-  // ----- Assertions -----
   async expectPageLoaded(): Promise<void> {
     await expect(this.filterAll).toBeVisible();
     await expect(this.searchInput).toBeVisible();

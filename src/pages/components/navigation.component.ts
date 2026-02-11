@@ -1,12 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from '../base.page';
 
-/**
- * NavigationComponent - Shared sidebar/topbar navigation component.
- * Reusable across all authenticated pages.
- */
 export class NavigationComponent extends BasePage {
-  // ----- Sidebar Nav Locators -----
   readonly dashboardLink: Locator;
   readonly transferLink: Locator;
   readonly historyLink: Locator;
@@ -17,8 +12,6 @@ export class NavigationComponent extends BasePage {
   readonly settingsLink: Locator;
   readonly logoutButton: Locator;
   readonly sidebarToggle: Locator;
-
-  // Admin Nav
   readonly adminDashboardLink: Locator;
   readonly adminUsersLink: Locator;
 
@@ -38,7 +31,6 @@ export class NavigationComponent extends BasePage {
     this.adminUsersLink = page.getByTestId('nav-link-user-management');
   }
 
-  // ----- Navigation Actions -----
   async goToDashboard(): Promise<void> {
     await this.dashboardLink.click();
   }
@@ -87,7 +79,6 @@ export class NavigationComponent extends BasePage {
     await this.sidebarToggle.click();
   }
 
-  // ----- Assertions -----
   async expectUserNavVisible(): Promise<void> {
     await expect(this.dashboardLink).toBeVisible();
     await expect(this.transferLink).toBeVisible();

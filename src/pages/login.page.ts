@@ -1,11 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
-/**
- * LoginPage - Page Object for the Login screen.
- */
 export class LoginPage extends BasePage {
-  // ----- Locators -----
   readonly usernameInput: Locator;
   readonly passwordInput: Locator;
   readonly loginButton: Locator;
@@ -27,7 +23,6 @@ export class LoginPage extends BasePage {
     this.loginForm = page.getByTestId('form-login');
   }
 
-  // ----- Actions -----
   async goto(): Promise<void> {
     await this.navigateTo('/login');
   }
@@ -50,7 +45,6 @@ export class LoginPage extends BasePage {
     await this.registerLink.click();
   }
 
-  // ----- Assertions -----
   async expectToBeOnLoginPage(): Promise<void> {
     await expect(this.loginForm).toBeVisible();
   }

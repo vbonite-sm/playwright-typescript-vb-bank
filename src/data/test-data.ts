@@ -1,8 +1,5 @@
-// ============================================
-// Test Data for VB Bank Feature Tests
-// ============================================
+import { uniqueId } from '../helpers';
 
-// ----- Transfer Test Data -----
 export const transferData = {
   valid: {
     recipientAccount: '2345678901',
@@ -26,13 +23,11 @@ export const transferData = {
   },
 };
 
-// ----- Top Up Test Data -----
 export const topUpData = {
   customAmount: '200',
   quickAmounts: [50, 100, 250, 500] as const,
 };
 
-// ----- Bill Pay Test Data -----
 export const billPayData = {
   electricity: {
     provider: 'VB Power',
@@ -54,7 +49,6 @@ export const billPayData = {
   },
 };
 
-// ----- Loan Test Data -----
 export const loanData = {
   personal: {
     type: 'loan_personal',
@@ -82,12 +76,11 @@ export const loanData = {
   },
 };
 
-// ----- Registration Test Data -----
 export const registrationData = {
   valid: {
     fullName: 'Test User',
-    username: `testuser_${Date.now()}`,
-    email: `testuser_${Date.now()}@example.com`,
+    username: `testuser_${uniqueId()}`,
+    email: `testuser_${uniqueId()}@example.com`,
     password: 'Test@123',
     confirmPassword: 'Test@123',
   },
@@ -100,7 +93,6 @@ export const registrationData = {
   },
 };
 
-// ----- Settings Test Data -----
 export const settingsData = {
   profileUpdate: {
     fullName: 'John Doe Updated',
@@ -114,7 +106,6 @@ export const settingsData = {
   },
 };
 
-// ----- Mock Gateway Card -----
 export const testCard = {
   number: '4242424242424242',
   cvc: '123',

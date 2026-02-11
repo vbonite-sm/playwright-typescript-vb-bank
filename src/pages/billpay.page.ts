@@ -1,11 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
-/**
- * BillPayPage - Page Object for the Bill Pay screen.
- */
 export class BillPayPage extends BasePage {
-  // ----- Locators -----
   readonly amountInput: Locator;
   readonly descriptionInput: Locator;
   readonly accountNumberInput: Locator;
@@ -21,7 +17,6 @@ export class BillPayPage extends BasePage {
     this.successAlert = page.getByTestId('alert-success');
   }
 
-  // ----- Actions -----
   async goto(): Promise<void> {
     await this.navigateTo('/bill-pay');
   }
@@ -42,7 +37,6 @@ export class BillPayPage extends BasePage {
     }
   }
 
-  // ----- Assertions -----
   async expectPageLoaded(): Promise<void> {
     await expect(this.page.locator('.bill-pay-page, .billpay-page')).toBeVisible();
   }

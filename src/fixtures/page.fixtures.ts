@@ -14,10 +14,7 @@ import {
   NavigationComponent,
 } from '../pages';
 
-/**
- * Custom fixtures providing pre-initialized Page Objects.
- * This eliminates boilerplate in test files.
- */
+/** Page Object fixtures — eliminates boilerplate in test files. */
 type PageFixtures = {
   loginPage: LoginPage;
   registerPage: RegisterPage;

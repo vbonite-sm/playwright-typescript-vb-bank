@@ -1,11 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
-/**
- * LoanPage - Page Object for the Loan Application wizard.
- */
 export class LoanPage extends BasePage {
-  // ----- Locators -----
   readonly nextButton: Locator;
   readonly backButton: Locator;
   readonly submitButton: Locator;
@@ -25,7 +21,6 @@ export class LoanPage extends BasePage {
     this.successAlert = page.getByTestId('alert-success');
   }
 
-  // ----- Actions -----
   async goto(): Promise<void> {
     await this.navigateTo('/loans');
   }
@@ -51,9 +46,7 @@ export class LoanPage extends BasePage {
     await this.submitButton.click();
   }
 
-  /**
-   * Complete loan application flow: Select type → Fill details → Review → Submit
-   */
+  /** Full loan application flow: type → details → review → submit. */
   async applyForLoan(loanTypeId: string, amount: string, term: string): Promise<void> {
     // Step 1: Select loan type
     await this.selectLoanType(loanTypeId);
@@ -71,7 +64,6 @@ export class LoanPage extends BasePage {
     return this.page.getByTestId('loan-application').nth(index);
   }
 
-  // ----- Assertions -----
   async expectPageLoaded(): Promise<void> {
     await expect(this.page.getByTestId('step-1')).toBeVisible();
   }

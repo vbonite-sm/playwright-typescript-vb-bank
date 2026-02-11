@@ -1,11 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
-/**
- * TopUpPage - Page Object for the Top Up screen.
- */
 export class TopUpPage extends BasePage {
-  // ----- Locators -----
   readonly amountInput: Locator;
   readonly proceedButton: Locator;
   readonly currentBalance: Locator;
@@ -21,7 +17,6 @@ export class TopUpPage extends BasePage {
     this.successAlert = page.getByTestId('alert-success');
   }
 
-  // ----- Actions -----
   async goto(): Promise<void> {
     await this.navigateTo('/top-up');
   }
@@ -43,7 +38,6 @@ export class TopUpPage extends BasePage {
     await this.proceedToPayment();
   }
 
-  // ----- Assertions -----
   async expectPageLoaded(): Promise<void> {
     await expect(this.amountInput).toBeVisible();
     await expect(this.proceedButton).toBeVisible();

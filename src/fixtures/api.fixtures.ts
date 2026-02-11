@@ -1,15 +1,9 @@
-// ============================================
-// API Test Fixtures for VB Bank Mock API
-// ============================================
-// Provides pre-configured ApiClient instances for API tests.
-// - `api`: A bare API client (no auth). Use for auth endpoint tests.
-// - `userApi`: Authenticated as default user (john.doe).
-// - `adminApi`: Authenticated as admin.
-// ============================================
-
 import { test as base, expect } from '@playwright/test';
 import { ApiClient } from '../api';
 import { defaultUser, admin } from '../data/credentials';
+import { createLogger } from '../helpers';
+
+const log = createLogger('ApiFixture');
 
 type ApiFixtures = {
   /** Un-authenticated API client — initialized with SW but no token */
@@ -32,6 +26,7 @@ export const test = base.extend<ApiFixtures>({
     await client.init();
     const loginResponse = await client.login(defaultUser.username, defaultUser.password);
     expect(loginResponse.success).toBe(true);
+    log.info('userApi fixture ready', { user: defaultUser.username });
     await use(client);
   },
 
@@ -40,6 +35,7 @@ export const test = base.extend<ApiFixtures>({
     await client.init();
     const loginResponse = await client.login(admin.username, admin.password);
     expect(loginResponse.success).toBe(true);
+    log.info('adminApi fixture ready', { user: admin.username });
     await use(client);
   },
 });

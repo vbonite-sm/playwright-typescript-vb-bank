@@ -1,13 +1,11 @@
 import { Page } from '@playwright/test';
 
 /**
- * BasePage - Abstract base class for all page objects.
- * Provides shared navigation and utility methods.
+ * Abstract base class for all page objects.
  */
 export abstract class BasePage {
   constructor(protected readonly page: Page) {}
 
-  // ----- Navigation Helpers -----
   async navigateTo(path: string): Promise<void> {
     await this.page.goto(path);
   }
@@ -16,7 +14,6 @@ export abstract class BasePage {
     await this.page.waitForLoadState('networkidle');
   }
 
-  // ----- Common Element Helpers -----
   async getAlertSuccess(): Promise<string> {
     const alert = this.page.getByTestId('alert-success');
     await alert.waitFor({ state: 'visible' });
@@ -37,7 +34,6 @@ export abstract class BasePage {
     return this.page.getByTestId('alert-error').isVisible();
   }
 
-  // ----- URL Helpers -----
   async getCurrentUrl(): Promise<string> {
     return this.page.url();
   }

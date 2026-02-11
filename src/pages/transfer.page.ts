@@ -1,11 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
-/**
- * TransferPage - Page Object for the Money Transfer screen.
- */
 export class TransferPage extends BasePage {
-  // ----- Locators -----
   readonly recipientAccountInput: Locator;
   readonly amountInput: Locator;
   readonly descriptionInput: Locator;
@@ -23,7 +19,6 @@ export class TransferPage extends BasePage {
     this.successAlert = page.getByTestId('alert-success');
   }
 
-  // ----- Actions -----
   async goto(): Promise<void> {
     await this.navigateTo('/transfer');
   }
@@ -55,7 +50,6 @@ export class TransferPage extends BasePage {
     return this.page.getByTestId(`search-result-${index}`);
   }
 
-  // ----- Assertions -----
   async expectTransferSuccess(): Promise<void> {
     await expect(this.successAlert).toBeVisible();
   }

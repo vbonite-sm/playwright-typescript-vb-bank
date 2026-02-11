@@ -49,3 +49,108 @@ npx playwright test --grep @smoke
 ```bash
 npm run test:smoke
 ```
+
+---
+
+## AI Explorer Workflow
+
+This project uses a structured AI exploration workflow to systematically discover, document, and test features. The workflow has five stages, each triggered by a specific command.
+
+### Workflow Stages
+
+| Stage | Command | Prompt File | Purpose |
+|-------|---------|-------------|---------|
+| **Explore** | "Explore {feature}" | `.github/prompts/explore.prompt.md` | Navigate UI, document structure, capture flows |
+| **Draft** | "Draft test cases for {feature}" | `.github/prompts/draft-test-cases.prompt.md` | Transform notes into structured test scenarios |
+| **Generate** | "Generate tests for {feature}" | `.github/prompts/generate-tests.prompt.md` | Create executable Playwright tests |
+| **Update** | "Update docs for {feature}" | `.github/prompts/update-docs.prompt.md` | Update project documentation |
+| **Heal** | "Fix the failing test" | `.github/prompts/heal-tests.prompt.md` | Repair broken tests |
+
+### How It Works
+
+1. **Explore a feature**: Say "Explore {feature}" (e.g., "Explore transfer")
+   - Creates session folder in `sessions/YYYY-MM-DD-{feature}/`
+   - Navigates the UI using browser automation
+   - Documents findings incrementally in `exploration-notes.md`
+   - Captures raw Playwright code for later use
+
+2. **Draft test cases**: Say "Draft test cases for {feature}"
+   - Reads exploration notes
+   - Creates `test-cases.md` with structured scenarios
+   - Includes steps, expected results, and tags
+
+3. **Generate tests**: Say "Generate tests for {feature}"
+   - Reads test cases and exploration notes
+   - Creates/updates page objects in `src/pages/`
+   - Generates test files in `src/tests/ui/` or `src/tests/api/`
+
+4. **Update documentation**: Say "Update docs for {feature}"
+   - Updates README with test counts
+   - Creates/updates feature documentation
+   - Documents test patterns
+
+5. **Heal failing tests**: Say "Fix the failing test"
+   - Inspects current UI with browser tools
+   - Identifies why test is failing
+   - Updates selectors or test logic
+
+### Key Features
+
+- **Incremental note-writing**: Notes updated every 2-3 actions to prevent data loss
+- **Session continuity**: Browser stays open across chat sessions
+- **Context management**: Start fresh chats when needed; notes file is durable memory
+- **Prefer snapshots**: Use accessibility snapshots over screenshots
+
+### Session Data
+
+All exploration data lives in `sessions/` (gitignored):
+```
+sessions/
+└── 2026-02-10-transfer/
+    ├── metadata.json
+    ├── exploration-notes.md
+    ├── test-cases.md
+    └── screenshots/
+```
+
+### VB Bank Specifics
+
+**Application**: `https://vb-bank-demo.vercel.app`
+
+**Credentials** (from `src/data/credentials.ts`):
+- Regular users: john.doe, jane.smith, mike.wilson (password: user123)
+- Admin: admin (password: admin123)
+
+**Features to Explore**:
+- Login/Register
+- Dashboard
+- Transfer
+- Top-up
+- Loan
+- Bill Pay
+- History
+- Settings
+- Admin Dashboard
+- User Management
+
+**Test Organization**:
+- UI tests: `src/tests/ui/{feature}.spec.ts`
+- API tests: `src/tests/api/{feature}.api.spec.ts`
+- Page objects: `src/pages/{feature}.page.ts`
+
+**Test Tags**:
+- `@smoke` - Critical happy path
+- `@regression` - Comprehensive scenarios
+- `@e2e` - End-to-end flows
+- `@admin` - Admin features
+- `@api` - API tests
+
+### Best Practices
+
+1. **Read the prompt file**: Each stage has detailed instructions in `.github/prompts/`
+2. **Update notes continuously**: Don't accumulate findings in chat memory
+3. **Use browser tools**: Always inspect live UI, don't guess at selectors
+4. **Follow project conventions**: Use npm scripts, existing patterns, page objects
+5. **Start fresh if needed**: Context limits can be hit; start new chat pointing to notes file
+
+For complete workflow documentation, see [docs/ai-explorer.md](../docs/ai-explorer.md).

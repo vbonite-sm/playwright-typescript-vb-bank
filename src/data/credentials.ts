@@ -1,7 +1,3 @@
-// ============================================
-// Credentials & User Data for VB Bank Tests
-// ============================================
-
 export interface UserCredentials {
   username: string;
   password: string;
@@ -21,7 +17,6 @@ export interface TransferRecipient {
   accountNumber: string;
 }
 
-// ----- User Accounts -----
 export const users: Record<string, UserCredentials> = {
   johnDoe: {
     username: 'john.doe',
@@ -49,16 +44,13 @@ export const users: Record<string, UserCredentials> = {
   },
 };
 
-// ----- Admin Account -----
 export const admin: AdminCredentials = {
   username: 'admin',
   password: 'admin123',
 };
 
-// ----- Default user for most tests -----
 export const defaultUser = users.johnDoe;
 
-// ----- Transfer Recipients -----
 export const transferRecipients: Record<string, TransferRecipient> = {
   janeSmith: {
     name: 'Jane Smith',

@@ -20,6 +20,13 @@ playwright-typescript-vb-bank/
 │   ├── fixtures/            # Custom Playwright fixtures
 │   │   ├── page.fixtures.ts # Page Object injection fixtures
 │   │   └── api.fixtures.ts  # API client fixtures
+│   ├── helpers/             # Shared utilities & assertion helpers
+│   │   ├── api-assertions.ts   # expectApiSuccess, expectApiError, etc.
+│   │   ├── data-generators.ts  # uniqueId, randomUsername, randomAmount, etc.
+│   │   ├── format.helpers.ts   # formatCurrency, parseCurrency, maskString, etc.
+│   │   ├── wait.helpers.ts     # pollUntil, retryAsync, waitForNetworkSettle
+│   │   ├── logger.ts           # Zero-dependency structured JSONL logger
+│   │   └── index.ts            # Barrel export
 │   ├── pages/               # Page Object Models (POM)
 │   │   ├── base.page.ts     # Abstract base page
 │   │   ├── login.page.ts
@@ -28,31 +35,16 @@ playwright-typescript-vb-bank/
 │   │   ├── ... (other pages)
 │   │   └── components/
 │   │       └── navigation.component.ts
+│   ├── reporters/           # Custom Playwright reporters
+│   │   └── json-log.reporter.ts  # Structured test lifecycle logger
 │   └── tests/               # Test specs (AAA pattern)
 │       ├── auth.setup.ts    # Auth state setup
-│       ├── ui/              # UI/Functional tests
-│       │   ├── auth.spec.ts
-│       │   ├── dashboard.spec.ts
-│       │   ├── transfer.spec.ts
-│       │   ├── history.spec.ts
-│       │   ├── topup.spec.ts
-│       │   ├── loan.spec.ts
-│       │   ├── navigation.spec.ts
-│       │   ├── admin-dashboard.spec.ts
-│       │   └── admin-user-management.spec.ts
-│       └── api/             # API tests
-│           ├── auth.api.spec.ts
-│           ├── account.api.spec.ts
-│           ├── transfer.api.spec.ts
-│           ├── transaction.api.spec.ts
-│           ├── cards.api.spec.ts
-│           ├── loans.api.spec.ts
-│           ├── bills.api.spec.ts
-│           ├── profile.api.spec.ts
-│           └── admin.api.spec.ts
+│       ├── ui/              # UI/Functional tests (9 suites)
+│       └── api/             # API tests (9 suites)
 ├── storage-state/           # Saved auth states (gitignored)
-├── .env                     # Environment variables (gitignored)
-├── .env.example             # Template for environment config
+├── test-logs/               # Structured JSONL logs (gitignored)
+├── global-setup.ts          # Pre-run health checks & artifact cleanup
+├── global-teardown.ts       # Post-run summary & log archiving
 ├── playwright.config.ts     # Playwright configuration
 ├── tsconfig.json            # TypeScript configuration
 └── package.json
@@ -80,13 +72,18 @@ cp .env.example .env
 
 | Command | Description |
 |---|---|
-| `npm test` | Run all tests |
+| `npm run test:smoke` | Run smoke tests only |
+| `npm run test:regression` | Run regression tests |
+| `npm run test:e2e` | Run end-to-end tests |
+| `npm run test:api-only` | Run API tests only |
+| `npm run test:ui-only` | Run UI tests only |
 | `npm run test:headed` | Run with browser visible |
 | `npm run test:ui` | Open Playwright UI mode |
 | `npm run test:debug` | Debug mode with inspector |
-| `npm run test:auth` | Run auth tests only |
-| `npm run test:user` | Run user portal tests only |
-| `npm run test:admin` | Run admin portal tests only |
+| `npm run test:auth` | Run auth setup project |
+| `npm run test:user` | Run user (chromium) project |
+| `npm run test:admin` | Run admin project |
+| `npm run test:api` | Run API project |
 | `npm run report` | Open HTML test report |
 
 ## 🏗️ Architecture
@@ -122,6 +119,29 @@ test('should transfer money successfully', async ({ transferPage }) => {
 - **Feature data** is organized in `src/data/test-data.ts`
 - **Environment config** is loaded from `.env` via `src/config/env.config.ts`
 
+### Helpers & Utilities (`src/helpers/`)
+A zero-dependency shared utilities layer used across all test suites:
+
+| Module | Purpose | Key Functions |
+|--------|---------|---------------|
+| `api-assertions.ts` | API response validation with TypeScript type narrowing | `expectApiSuccess`, `expectApiError`, `expectApiArray`, `expectUnauthorized` |
+| `data-generators.ts` | Unique test data generation via `node:crypto` | `uniqueId`, `randomUsername`, `randomAmount`, `randomRegistrationData` |
+| `format.helpers.ts` | Currency & string formatting | `formatCurrency`, `parseCurrency`, `maskString`, `formatDateISO` |
+| `wait.helpers.ts` | Smart waits & retry logic | `pollUntil`, `retryAsync`, `waitForNetworkSettle` |
+| `logger.ts` | Structured JSONL logging | `createLogger`, `clearLogs` |
+
+### Structured Logging
+The framework writes structured JSONL logs to `test-logs/`:
+- **`test-execution.jsonl`** — all test lifecycle events, fixture setup, API calls
+- **`errors.jsonl`** — error-level entries only (quick triage)
+- **`run-summary.json`** — generated post-run with totals, pass rate, failures, and slowest tests
+
+Logging is powered by a custom zero-dependency logger (`src/helpers/logger.ts`) and a custom Playwright reporter (`src/reporters/json-log.reporter.ts`). No winston/pino required.
+
+### Global Hooks
+- **`global-setup.ts`** — environment health check (fail-fast if app is unreachable), stale artifact cleanup, log initialization
+- **`global-teardown.ts`** — parses JSONL logs, generates `run-summary.json`, prints a console summary with failures and slowest tests
+
 ## 🔑 Test Accounts
 
 | Role | Username | Password |
@@ -132,6 +152,8 @@ test('should transfer money successfully', async ({ transferPage }) => {
 | Admin | admin | admin123 |
 
 ## 📊 Test Coverage
+
+**Total: 124 tests across 19 files (9 UI + 9 API + 1 setup)**
 
 ### UI Tests (53 tests)
 
@@ -147,7 +169,7 @@ test('should transfer money successfully', async ({ transferPage }) => {
 | Admin Dashboard | System stats visibility |
 | Admin Users | User list, Search, Details modal |
 
-### API Tests (66 tests)
+### API Tests (71 tests)
 
 The framework includes a comprehensive API test layer that tests the mock REST API directly through the browser's Service Worker.
 
@@ -173,13 +195,14 @@ The VB Bank Demo uses a **mock REST API** with Service Worker interception. API 
 
 ### API Client Usage
 ```typescript
-import { test, expect } from '../../fixtures/api.fixtures';
+import { test } from '../../fixtures/api.fixtures';
+import { expectApiSuccess } from '../../helpers';
 
-test('should login via API', async ({ api }) => {
-  // api fixture provides an initialized ApiClient
-  const response = await api.login({ username: 'john.doe', password: 'user123' });
-  expect(response.success).toBe(true);
-  expect(response.data.accessToken).toBeTruthy();
+test('should login via API', async ({ userApi }) => {
+  const response = await userApi.getBalance();
+  expectApiSuccess(response);
+  // response.data is now type-narrowed — no optional chaining needed
+  console.log(response.data.balance);
 });
 ```
 

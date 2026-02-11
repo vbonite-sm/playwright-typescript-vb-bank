@@ -5,6 +5,8 @@ import path from 'node:path';
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 export default defineConfig({
+  globalSetup: require.resolve('./global-setup'),
+  globalTeardown: require.resolve('./global-teardown'),
   testDir: './src/tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -14,6 +16,7 @@ export default defineConfig({
     ['list'],
     ['html', { open: 'never' }],
     ['junit', { outputFile: 'test-results/junit-report.xml' }],
+    ['./src/reporters/json-log.reporter.ts'],
   ],
 
   use: {

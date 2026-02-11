@@ -1,11 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
-/**
- * DashboardPage - Page Object for the User Dashboard.
- */
 export class DashboardPage extends BasePage {
-  // ----- Locators -----
   readonly balanceAmount: Locator;
   readonly accountNumber: Locator;
   readonly statDeposits: Locator;
@@ -23,7 +19,6 @@ export class DashboardPage extends BasePage {
     this.refreshRatesButton = page.getByTestId('btn-refresh-rates');
   }
 
-  // ----- Actions -----
   async goto(): Promise<void> {
     await this.navigateTo('/dashboard');
   }
@@ -48,7 +43,6 @@ export class DashboardPage extends BasePage {
     return this.page.getByTestId(`currency-rate-${code}`);
   }
 
-  // ----- Assertions -----
   async expectDashboardLoaded(): Promise<void> {
     await expect(this.balanceAmount).toBeVisible();
     await expect(this.accountNumber).toBeVisible();

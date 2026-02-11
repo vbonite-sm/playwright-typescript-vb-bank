@@ -1,11 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
-/**
- * SettingsPage - Page Object for User Account Settings.
- */
 export class SettingsPage extends BasePage {
-  // ----- Profile Tab Locators -----
   readonly profileTab: Locator;
   readonly passwordTab: Locator;
   readonly fullNameInput: Locator;
@@ -13,13 +9,11 @@ export class SettingsPage extends BasePage {
   readonly phoneInput: Locator;
   readonly saveProfileButton: Locator;
 
-  // ----- Password Tab Locators -----
   readonly currentPasswordInput: Locator;
   readonly newPasswordInput: Locator;
   readonly confirmPasswordInput: Locator;
   readonly changePasswordButton: Locator;
 
-  // ----- Common -----
   readonly errorAlert: Locator;
   readonly successAlert: Locator;
 
@@ -39,7 +33,6 @@ export class SettingsPage extends BasePage {
     this.successAlert = page.getByTestId('alert-success');
   }
 
-  // ----- Actions -----
   async goto(): Promise<void> {
     await this.navigateTo('/settings');
   }
@@ -74,7 +67,6 @@ export class SettingsPage extends BasePage {
     await this.changePasswordButton.click();
   }
 
-  // ----- Assertions -----
   async expectPageLoaded(): Promise<void> {
     await expect(this.page.locator('.settings-page')).toBeVisible();
   }

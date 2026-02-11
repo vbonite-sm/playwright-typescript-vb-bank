@@ -1,9 +1,6 @@
-/**
- * Cards API Tests
- * Tests for card management: get cards, freeze, unfreeze, block, PIN
- */
 import { test, expect } from '../../fixtures/api.fixtures';
 import { defaultUser } from '../../data/credentials';
+import { expectApiSuccess, expectApiError, expectApiArray, expectUnauthorized } from '../../helpers';
 
 test.describe('Cards API @api @cards', () => {
   test.beforeEach(async ({ api }) => {
@@ -13,14 +10,10 @@ test.describe('Cards API @api @cards', () => {
 
   test.describe('Get Cards', () => {
     test('should retrieve user cards successfully', async ({ api }) => {
-      // Act
       const response = await api.getCards();
 
-      // Assert
-      expect(response.success).toBe(true);
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.data)).toBe(true);
-      
+      expectApiArray(response);
+
       if (response.data && response.data.length > 0) {
         const card = response.data[0];
         expect(card.id).toBeDefined();
@@ -29,12 +22,10 @@ test.describe('Cards API @api @cards', () => {
     });
 
     test('should have masked card number for security', async ({ api }) => {
-      // Act
       const response = await api.getCards();
 
-      // Assert
-      expect(response.success).toBe(true);
-      
+      expectApiSuccess(response);
+
       if (response.data && response.data.length > 0) {
         const cardNumber = response.data[0].cardNumber;
         // Card numbers should be partially masked (e.g., ****1234)
@@ -58,12 +49,9 @@ test.describe('Cards API @api @cards', () => {
       // Skip if no cards available
       test.skip(!testCardId, 'No cards available for testing');
 
-      // Act
       const response = await api.freezeCard(testCardId);
 
-      // Assert
-      expect(response.success).toBe(true);
-      expect(response.status).toBe(200);
+      expectApiSuccess(response, 200);
       expect(response.data?.status).toBe('frozen');
     });
 
@@ -74,12 +62,9 @@ test.describe('Cards API @api @cards', () => {
       // Arrange - freeze first
       await api.freezeCard(testCardId);
 
-      // Act
       const response = await api.unfreezeCard(testCardId);
 
-      // Assert
-      expect(response.success).toBe(true);
-      expect(response.status).toBe(200);
+      expectApiSuccess(response, 200);
       expect(response.data?.status).toBe('active');
     });
 
@@ -87,29 +72,21 @@ test.describe('Cards API @api @cards', () => {
       // Skip if no cards available
       test.skip(!testCardId, 'No cards available for testing');
 
-      // Act
       const response = await api.blockCard(testCardId);
 
-      // Assert
-      expect(response.success).toBe(true);
-      expect(response.status).toBe(200);
+      expectApiSuccess(response, 200);
       expect(response.data?.status).toBe('blocked');
     });
 
     test('should reject operations on invalid card ID', async ({ api }) => {
-      // Act
       const response = await api.freezeCard('invalid-card-id-12345');
 
-      // Assert
-      expect(response.success).toBe(false);
-      expect(response.status).toBeGreaterThanOrEqual(400);
-      expect(response.error).toBeDefined();
+      expectApiError(response);
     });
   });
 
   test.describe('Card PIN', () => {
     test('should retrieve card PIN for valid card', async ({ api }) => {
-      // Arrange
       const cardsResponse = await api.getCards();
       test.skip(
         !cardsResponse.success || !cardsResponse.data?.length,
@@ -118,22 +95,17 @@ test.describe('Cards API @api @cards', () => {
 
       const cardId = cardsResponse.data![0].id;
 
-      // Act
       const response = await api.getCardPIN(cardId);
 
-      // Assert
-      expect(response.success).toBe(true);
-      expect(response.status).toBe(200);
+      expectApiSuccess(response, 200);
       expect(response.data?.pin).toBeDefined();
       // PIN should be 4 digits
       expect(response.data?.pin).toMatch(/^\d{4}$/);
     });
 
     test('should reject PIN request for invalid card', async ({ api }) => {
-      // Act
       const response = await api.getCardPIN('invalid-card-id');
 
-      // Assert
       expect(response.success).toBe(false);
       expect(response.status).toBeGreaterThanOrEqual(400);
     });
@@ -142,16 +114,11 @@ test.describe('Cards API @api @cards', () => {
 
 test.describe('Cards API - Authentication @api @cards @security', () => {
   test('should reject card operations without authentication', async ({ api }) => {
-    // Arrange
     await api.init();
     await api.clearAuth();
 
-    // Act
     const response = await api.getCards('user-1');
 
-    // Assert
-    expect(response.success).toBe(false);
-    expect(response.status).toBe(401);
-    expect(response.error?.code).toBe('UNAUTHORIZED');
+    expectUnauthorized(response);
   });
 });
