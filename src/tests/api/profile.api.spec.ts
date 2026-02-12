@@ -2,14 +2,14 @@ import { test, expect } from '../../fixtures/api.fixtures';
 import { defaultUser } from '../../data/credentials';
 import { expectApiSuccess, expectApiError, expectApiArray, expectUnauthorized } from '../../helpers';
 
-test.describe('Profile API @api @profile', () => {
+test.describe('Profile API', { tag: ['@api', '@profile'] }, () => {
   test.beforeEach(async ({ api }) => {
     await api.init();
     await api.login(defaultUser.username, defaultUser.password);
   });
 
   test.describe('User Profile', () => {
-    test('should get current user profile', async ({ api }) => {
+    test('should get current user profile', { tag: '@medium' }, async ({ api }) => {
       const response = await api.getUserProfile();
 
       expectApiSuccess(response, 200);
@@ -18,7 +18,7 @@ test.describe('Profile API @api @profile', () => {
       expect(response.data.fullName).toBeDefined();
     });
 
-    test('should update profile successfully', async ({ api }) => {
+    test('should update profile successfully', { tag: '@medium' }, async ({ api }) => {
       const updates = {
         fullName: 'John Updated Doe',
         phone: '+1-555-123-4567',
@@ -30,7 +30,7 @@ test.describe('Profile API @api @profile', () => {
       expect(response.data.fullName).toBe(updates.fullName);
     });
 
-    test('should update email address', async ({ api }) => {
+    test('should update email address', { tag: '@medium' }, async ({ api }) => {
       const updates = {
         email: 'john.updated@example.com',
       };
@@ -40,7 +40,7 @@ test.describe('Profile API @api @profile', () => {
       expectApiSuccess(response, 200);
     });
 
-    test('should update address', async ({ api }) => {
+    test('should update address', { tag: '@medium' }, async ({ api }) => {
       const updates = {
         address: '123 Main Street, City, State 12345',
       };
@@ -50,7 +50,7 @@ test.describe('Profile API @api @profile', () => {
       expectApiSuccess(response, 200);
     });
 
-    test('should update profile with various fields', async ({ api }) => {
+    test('should update profile with various fields', { tag: '@low' }, async ({ api }) => {
       const updates = {
         phone: '+1-555-999-8888',
       };
@@ -62,7 +62,7 @@ test.describe('Profile API @api @profile', () => {
   });
 
   test.describe('Password Management', () => {
-    test('should change password successfully', async ({ api }) => {
+    test('should change password successfully', { tag: ['@critical', '@security'] }, async ({ api }) => {
       const currentPassword = defaultUser.password;
       const newPassword = 'newSecurePassword123!';
 
@@ -74,7 +74,7 @@ test.describe('Profile API @api @profile', () => {
       await api.changePassword(currentPassword, newPassword);
     });
 
-    test('should reject password change with wrong current password', async ({ api }) => {
+    test('should reject password change with wrong current password', { tag: ['@critical', '@security'] }, async ({ api }) => {
       const wrongPassword = 'wrongPassword123';
       const newPassword = 'newPassword456';
 
@@ -83,7 +83,7 @@ test.describe('Profile API @api @profile', () => {
       expectApiError(response);
     });
 
-    test('should reject weak new password', async ({ api }) => {
+    test('should reject weak new password', { tag: ['@high', '@security'] }, async ({ api }) => {
       // Arrange - using current password and a weak new password
       const currentPassword = defaultUser.password;
       const weakPassword = '123'; // Too short/weak
@@ -95,21 +95,21 @@ test.describe('Profile API @api @profile', () => {
   });
 
   test.describe('Session Management', () => {
-    test('should get current session after login', async ({ api }) => {
+    test('should get current session after login', { tag: ['@high', '@security'] }, async ({ api }) => {
       const response = await api.getSession();
 
       expectApiSuccess(response, 200);
       expect(response.data.userId).toBeDefined();
     });
 
-    test('should refresh token successfully', async ({ api }) => {
+    test('should refresh token successfully', { tag: ['@high', '@security'] }, async ({ api }) => {
       const response = await api.refreshToken();
 
       expectApiSuccess(response);
       expect(response.data.accessToken).toBeDefined();
     });
 
-    test('should invalidate session after logout', async ({ api }) => {
+    test('should invalidate session after logout', { tag: ['@high', '@security'] }, async ({ api }) => {
       await api.logout();
 
       const response = await api.getSession();
@@ -120,7 +120,7 @@ test.describe('Profile API @api @profile', () => {
   });
 
   test.describe('Bill History', () => {
-    test('should get bill payment history', async ({ api }) => {
+    test('should get bill payment history', { tag: '@low' }, async ({ api }) => {
       const response = await api.getBillHistory();
 
       expectApiArray(response);
@@ -135,7 +135,7 @@ test.describe('Profile API @api @profile', () => {
   });
 
   test.describe('Loan Applications', () => {
-    test('should get loan applications history', async ({ api }) => {
+    test('should get loan applications history', { tag: '@medium' }, async ({ api }) => {
       const response = await api.getLoanApplications();
 
       expectApiArray(response);
@@ -150,8 +150,8 @@ test.describe('Profile API @api @profile', () => {
   });
 });
 
-test.describe('Profile API - Security @api @profile @security', () => {
-  test('should reject profile operations without authentication', async ({ api }) => {
+test.describe('Profile API - Security', { tag: ['@api', '@profile', '@security'] }, () => {
+  test('should reject profile operations without authentication', { tag: ['@high', '@security'] }, async ({ api }) => {
     await api.init();
     await api.clearAuth();
 
@@ -160,7 +160,7 @@ test.describe('Profile API - Security @api @profile @security', () => {
     expectUnauthorized(response);
   });
 
-  test('should reject password change without authentication', async ({ api }) => {
+  test('should reject password change without authentication', { tag: ['@critical', '@security'] }, async ({ api }) => {
     await api.init();
     await api.clearAuth();
 

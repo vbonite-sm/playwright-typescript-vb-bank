@@ -52,6 +52,45 @@ npm run test:smoke
 
 ---
 
+## Coding Style
+
+### Comments and Communication
+
+- **No emojis**: Never use emojis in code, comments, commit messages, or documentation
+- **Concise comments**: Keep comments brief and to the point. Focus on "why" not "what"
+- **Avoid verbose explanations**: Don't over-explain obvious code. Trust the developer's understanding
+- **Self-documenting code**: Prefer clear naming over excessive comments
+
+**Examples:**
+
+**❌ Don't do this:**
+```typescript
+// 🎉 This function calculates the total amount! It takes all the items 
+// in the array and adds them up one by one using a loop
+// Returns the sum of all items 🚀
+function calculateTotal(items: number[]): number {
+  // Initialize a variable to store our running total
+  let total = 0;
+  // Loop through each item in the items array
+  for (const item of items) {
+    // Add the current item to our total
+    total += item;
+  }
+  // Return the final calculated total
+  return total;
+}
+```
+
+**✅ Do this instead:**
+```typescript
+// Sums array values
+function calculateTotal(items: number[]): number {
+  return items.reduce((sum, item) => sum + item, 0);
+}
+```
+
+---
+
 ## AI Explorer Workflow
 
 This project uses a structured AI exploration workflow to systematically discover, document, and test features. The workflow has five stages, each triggered by a specific command.

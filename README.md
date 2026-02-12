@@ -1,5 +1,11 @@
 # VB Bank - Playwright Test Automation Framework
 
+![Risk-Based Tests](https://github.com/<owner>/<repo>/actions/workflows/risk-based.yml/badge.svg)
+![Playwright Tests](https://github.com/<owner>/<repo>/actions/workflows/playwright.yml/badge.svg)
+![Nightly Regression](https://github.com/<owner>/<repo>/actions/workflows/regression-schedule.yml/badge.svg)
+
+> Replace `<owner>/<repo>` above with the actual GitHub repository path (e.g. `myorg/playwright-typescript-vb-bank`).
+
 A production-grade Playwright + TypeScript test automation framework for the [VB Bank Demo](https://vb-bank-demo.vercel.app/) application.
 
 ## 📁 Project Structure
@@ -70,6 +76,8 @@ cp .env.example .env
 
 ## 🧪 Running Tests
 
+### Standard Test Commands
+
 | Command | Description |
 |---|---|
 | `npm run test:smoke` | Run smoke tests only |
@@ -85,6 +93,50 @@ cp .env.example .env
 | `npm run test:admin` | Run admin project |
 | `npm run test:api` | Run API project |
 | `npm run report` | Open HTML test report |
+
+### 🎯 Risk-Based Testing (NEW)
+
+Tests are prioritized by business impact, security, and compliance requirements:
+
+| Command | Tests | Duration | When to Run |
+|---------|-------|----------|-------------|
+| `npm run test:critical` | 10 | ~35s | Every commit (deployment gate) |
+| `npm run test:pre-deploy` | 18 | ~55s | Before staging/production |
+| `npm run test:high` | 8 | ~20s | Pre-release validation |
+| `npm run test:financial` | All financial | Varies | Money operations |
+| `npm run test:security` | All security | Varies | Auth/authorization |
+| `npm run risk:report` | N/A | N/A | Generate risk report |
+
+**Risk Tags:**
+- `@critical` - Must pass before deployment (auth, transfers, bills)
+- `@high` - High-impact features (loans, top-up, admin)
+- `@medium` - Supporting features (history, dashboard)
+- `@low` - UI/UX enhancements (navigation)
+
+📖 **See:** [Risk-Based Testing Guide](docs/03-guides/risk-based-testing.md) | [Quick Reference](docs/03-guides/RISK-QUICK-REF.md)
+
+### CI/CD Workflows
+
+Three GitHub Actions workflows implement the risk-based testing strategy:
+
+| Workflow | Trigger | What Runs |
+|----------|---------|-----------|
+| **Risk-Based Tests** | Push/PR to main, manual | Critical (P0) on every push; High (P1) + domain tests on PRs |
+| **Playwright Tests** | Push/PR to main, manual | Smoke, E2E, regression, API (selectable) |
+| **Nightly Regression** | Daily 2 AM UTC, weekly Sunday 3 AM | Nightly: P0-P2; Weekly: full suite (P0-P3) |
+
+**Pipeline flow:**
+```
+Push to main  -->  Critical (P0)  ──[must pass]──>  Merge allowed
+Pull request  -->  Critical (P0)  -->  High (P1) + Domain tests (parallel)
+Nightly       -->  Critical (P0)  -->  High (P1)  -->  Medium (P2)
+Weekly        -->  Critical (P0)  -->  High (P1)  -->  Medium (P2)  -->  Low (P3)
+```
+
+Each job produces:
+- dorny/test-reporter check annotations
+- JUnit step summary with pass/fail counts
+- Playwright HTML report as downloadable artifact
 
 ## 🏗️ Architecture
 

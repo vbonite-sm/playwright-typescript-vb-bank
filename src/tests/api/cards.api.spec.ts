@@ -2,14 +2,14 @@ import { test, expect } from '../../fixtures/api.fixtures';
 import { defaultUser } from '../../data/credentials';
 import { expectApiSuccess, expectApiError, expectApiArray, expectUnauthorized } from '../../helpers';
 
-test.describe('Cards API @api @cards', () => {
+test.describe('Cards API', { tag: ['@api', '@cards'] }, () => {
   test.beforeEach(async ({ api }) => {
     await api.init();
     await api.login(defaultUser.username, defaultUser.password);
   });
 
   test.describe('Get Cards', () => {
-    test('should retrieve user cards successfully', async ({ api }) => {
+    test('should retrieve user cards successfully', { tag: '@medium' }, async ({ api }) => {
       const response = await api.getCards();
 
       expectApiArray(response);
@@ -21,7 +21,7 @@ test.describe('Cards API @api @cards', () => {
       }
     });
 
-    test('should have masked card number for security', async ({ api }) => {
+    test('should have masked card number for security', { tag: ['@high', '@security'] }, async ({ api }) => {
       const response = await api.getCards();
 
       expectApiSuccess(response);
@@ -45,7 +45,7 @@ test.describe('Cards API @api @cards', () => {
       }
     });
 
-    test('should freeze card successfully', async ({ api }) => {
+    test('should freeze card successfully', { tag: ['@high', '@financial'] }, async ({ api }) => {
       // Skip if no cards available
       test.skip(!testCardId, 'No cards available for testing');
 
@@ -55,7 +55,7 @@ test.describe('Cards API @api @cards', () => {
       expect(response.data?.status).toBe('frozen');
     });
 
-    test('should unfreeze card successfully', async ({ api }) => {
+    test('should unfreeze card successfully', { tag: ['@high', '@financial'] }, async ({ api }) => {
       // Skip if no cards available
       test.skip(!testCardId, 'No cards available for testing');
 
@@ -68,7 +68,7 @@ test.describe('Cards API @api @cards', () => {
       expect(response.data?.status).toBe('active');
     });
 
-    test('should block card successfully', async ({ api }) => {
+    test('should block card successfully', { tag: ['@critical', '@financial'] }, async ({ api }) => {
       // Skip if no cards available
       test.skip(!testCardId, 'No cards available for testing');
 
@@ -78,7 +78,7 @@ test.describe('Cards API @api @cards', () => {
       expect(response.data?.status).toBe('blocked');
     });
 
-    test('should reject operations on invalid card ID', async ({ api }) => {
+    test('should reject operations on invalid card ID', { tag: '@medium' }, async ({ api }) => {
       const response = await api.freezeCard('invalid-card-id-12345');
 
       expectApiError(response);
@@ -86,7 +86,7 @@ test.describe('Cards API @api @cards', () => {
   });
 
   test.describe('Card PIN', () => {
-    test('should retrieve card PIN for valid card', async ({ api }) => {
+    test('should retrieve card PIN for valid card', { tag: ['@critical', '@security'] }, async ({ api }) => {
       const cardsResponse = await api.getCards();
       test.skip(
         !cardsResponse.success || !cardsResponse.data?.length,
@@ -103,7 +103,7 @@ test.describe('Cards API @api @cards', () => {
       expect(response.data?.pin).toMatch(/^\d{4}$/);
     });
 
-    test('should reject PIN request for invalid card', async ({ api }) => {
+    test('should reject PIN request for invalid card', { tag: '@medium' }, async ({ api }) => {
       const response = await api.getCardPIN('invalid-card-id');
 
       expect(response.success).toBe(false);
@@ -112,8 +112,8 @@ test.describe('Cards API @api @cards', () => {
   });
 });
 
-test.describe('Cards API - Authentication @api @cards @security', () => {
-  test('should reject card operations without authentication', async ({ api }) => {
+test.describe('Cards API - Authentication', { tag: ['@api', '@cards', '@security'] }, () => {
+  test('should reject card operations without authentication', { tag: ['@high', '@security'] }, async ({ api }) => {
     await api.init();
     await api.clearAuth();
 

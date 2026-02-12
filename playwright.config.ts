@@ -22,7 +22,7 @@ export default defineConfig({
 
   use: {
     baseURL: process.env.BASE_URL || 'https://vb-bank-demo.vercel.app',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     actionTimeout: Number.parseInt(process.env.DEFAULT_TIMEOUT || '30000'),
@@ -39,6 +39,103 @@ export default defineConfig({
       name: 'user-setup',
       testMatch: /.*\.setup\.ts/,
     },
+
+    // ========================================================================
+    // RISK-BASED TEST PROJECTS
+    // ========================================================================
+
+    // CRITICAL tests - Must pass before any deployment
+    {
+      name: 'critical',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: './storage-state/user.json',
+      },
+      dependencies: ['user-setup'],
+      testIgnore: /.*\.setup\.ts/,
+      grep: /@critical/,
+      retries: 2,
+      timeout: 120000,
+    },
+
+    // HIGH risk tests - Run before staging/production deploys
+    {
+      name: 'high-risk',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: './storage-state/user.json',
+      },
+      dependencies: ['user-setup'],
+      testIgnore: /.*\.setup\.ts/,
+      grep: /@high/,
+      retries: 1,
+    },
+
+    // MEDIUM risk tests - Run in nightly regression
+    {
+      name: 'medium-risk',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: './storage-state/user.json',
+      },
+      dependencies: ['user-setup'],
+      testIgnore: /.*\.setup\.ts/,
+      grep: /@medium/,
+    },
+
+    // LOW risk tests - Run weekly or before major releases
+    {
+      name: 'low-risk',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: './storage-state/user.json',
+      },
+      dependencies: ['user-setup'],
+      testIgnore: /.*\.setup\.ts/,
+      grep: /@low/,
+    },
+
+    // FINANCIAL tests - All money-related operations
+    {
+      name: 'financial',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: './storage-state/user.json',
+      },
+      dependencies: ['user-setup'],
+      testIgnore: /.*\.setup\.ts/,
+      grep: /@financial/,
+      retries: 2,
+    },
+
+    // SECURITY tests - Authentication, authorization, data protection
+    {
+      name: 'security',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: './storage-state/user.json',
+      },
+      dependencies: ['user-setup'],
+      testIgnore: /.*\.setup\.ts/,
+      grep: /@security/,
+      retries: 2,
+    },
+
+    // COMPLIANCE tests - Regulatory requirements
+    {
+      name: 'compliance',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: './storage-state/user.json',
+      },
+      dependencies: ['user-setup'],
+      testIgnore: /.*\.setup\.ts/,
+      grep: /@compliance/,
+    },
+
+    // ========================================================================
+    // STANDARD PROJECTS (Original)
+    // ========================================================================
 
     // Chrome tests with authenticated user state
     {

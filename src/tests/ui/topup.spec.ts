@@ -2,32 +2,32 @@ import { test, expect } from '../../fixtures';
 import { topUpData } from '../../data';
 import { waitForNetworkSettle } from '../../helpers';
 
-test.describe('Top Up Tests @regression', () => {
+test.describe('Top Up Tests', { tag: '@regression' }, () => {
   test.beforeEach(async ({ topUpPage }) => {
     await topUpPage.goto();
   });
 
-  test('should load top up page @smoke', async ({ topUpPage }) => {
+  test('should load top up page', { tag: ['@smoke', '@high', '@financial'] }, async ({ topUpPage }) => {
     await topUpPage.expectPageLoaded();
   });
 
-  test('should display current balance', async ({ topUpPage }) => {
+  test('should display current balance', { tag: '@high' }, async ({ topUpPage }) => {
     await topUpPage.expectBalanceDisplayed();
   });
 
-  test('should allow entering a custom amount', async ({ topUpPage }) => {
+  test('should allow entering a custom amount', { tag: ['@high', '@financial'] }, async ({ topUpPage }) => {
     await topUpPage.enterAmount(topUpData.customAmount);
 
     await expect(topUpPage.amountInput).toHaveValue(topUpData.customAmount);
   });
 
-  test('should select quick amount of $100', async ({ topUpPage, page }) => {
+  test('should select quick amount of $100', { tag: '@high' }, async ({ topUpPage, page }) => {
     await topUpPage.selectQuickAmount(100);
 
     await expect(topUpPage.amountInput).toHaveValue('100');
   });
 
-  test('should proceed to payment gateway', async ({ topUpPage, page }) => {
+  test('should proceed to payment gateway', { tag: ['@high', '@financial'] }, async ({ topUpPage, page }) => {
     await topUpPage.enterAmount('200');
     await topUpPage.proceedToPayment();
 

@@ -1,0 +1,302 @@
+name: Risk-Based Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+    inputs:
+      risk_level:
+        description: 'Risk level to run'
+        required: true
+        default: 'critical'
+        type: choice
+        options:
+          - critical
+          - pre-deploy
+          - high
+          - medium
+          - low
+          - financial
+          - security
+          - compliance
+          - all
+
+permissions:
+  contents: read
+  checks: write
+
+env:
+  BASE_URL: https://vb-bank-demo.vercel.app
+  CI: true
+
+jobs:
+  # Critical tests - always run, deployment gate
+  critical:
+    name: Critical (P0)
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'workflow_dispatch' ||
+      github.event.inputs.risk_level == 'critical' ||
+      github.event.inputs.risk_level == 'pre-deploy' ||
+      github.event.inputs.risk_level == 'all'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run critical tests
+        id: test
+        run: npm run test:critical
+        continue-on-error: true
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: critical-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: critical-results
+          path: test-results/
+          retention-days: 14
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Critical (P0) Results
+          path: test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Test summary
+        if: always()
+        run: |
+          echo "## Critical (P0) Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f test-results/junit-report.xml ]; then
+            TESTS=$(grep -oP 'tests="\K[0-9]+' test-results/junit-report.xml | head -1)
+            FAILURES=$(grep -oP 'failures="\K[0-9]+' test-results/junit-report.xml | head -1)
+            ERRORS=$(grep -oP 'errors="\K[0-9]+' test-results/junit-report.xml | head -1)
+            SKIPPED=$(grep -oP 'skipped="\K[0-9]+' test-results/junit-report.xml | head -1)
+            TIME=$(grep -oP 'time="\K[0-9.]+' test-results/junit-report.xml | head -1)
+            PASSED=$((TESTS - FAILURES - ERRORS - SKIPPED))
+            if [ "$FAILURES" -eq 0 ] && [ "$ERRORS" -eq 0 ]; then
+              echo "### All tests passed" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "### Some tests failed" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
+            echo "| Failed | $FAILURES |" >> $GITHUB_STEP_SUMMARY
+            echo "| Errors | $ERRORS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
+            echo "| Total | $TESTS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Duration | ${TIME}s |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No JUnit report found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Fail if critical tests failed
+        if: steps.test.outcome == 'failure'
+        run: |
+          echo "Critical tests failed - blocking deployment"
+          exit 1
+
+  # High-risk tests - run on PRs and pre-deploy
+  high-risk:
+    name: High Risk (P1)
+    runs-on: ubuntu-latest
+    needs: critical
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event.inputs.risk_level == 'pre-deploy' ||
+      github.event.inputs.risk_level == 'high' ||
+      github.event.inputs.risk_level == 'all'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run high-risk tests
+        run: npm run test:high
+        continue-on-error: true
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: high-risk-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: high-risk-results
+          path: test-results/
+          retention-days: 14
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: High Risk (P1) Results
+          path: test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Test summary
+        if: always()
+        run: |
+          echo "## High Risk (P1) Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f test-results/junit-report.xml ]; then
+            TESTS=$(grep -oP 'tests="\K[0-9]+' test-results/junit-report.xml | head -1)
+            FAILURES=$(grep -oP 'failures="\K[0-9]+' test-results/junit-report.xml | head -1)
+            ERRORS=$(grep -oP 'errors="\K[0-9]+' test-results/junit-report.xml | head -1)
+            SKIPPED=$(grep -oP 'skipped="\K[0-9]+' test-results/junit-report.xml | head -1)
+            TIME=$(grep -oP 'time="\K[0-9.]+' test-results/junit-report.xml | head -1)
+            PASSED=$((TESTS - FAILURES - ERRORS - SKIPPED))
+            if [ "$FAILURES" -eq 0 ] && [ "$ERRORS" -eq 0 ]; then
+              echo "### All tests passed" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "### Some tests failed" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
+            echo "| Failed | $FAILURES |" >> $GITHUB_STEP_SUMMARY
+            echo "| Errors | $ERRORS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
+            echo "| Total | $TESTS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Duration | ${TIME}s |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No JUnit report found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Domain-specific tests - run on PRs
+  domain-tests:
+    name: Domain (${{ matrix.domain }})
+    runs-on: ubuntu-latest
+    needs: critical
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event.inputs.risk_level == 'financial' ||
+      github.event.inputs.risk_level == 'security' ||
+      github.event.inputs.risk_level == 'compliance' ||
+      github.event.inputs.risk_level == 'all'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - domain: financial
+            script: test:financial
+          - domain: security
+            script: test:security
+          - domain: compliance
+            script: test:compliance
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run ${{ matrix.domain }} tests
+        run: npm run ${{ matrix.script }}
+        continue-on-error: true
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.domain }}-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.domain }}-results
+          path: test-results/
+          retention-days: 14
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: ${{ matrix.domain }} Results
+          path: test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+  # Summary job
+  risk-summary:
+    name: Risk Summary
+    runs-on: ubuntu-latest
+    needs: [critical, high-risk, domain-tests]
+    if: always()
+    steps:
+      - name: Risk assessment summary
+        run: |
+          echo "## Risk-Based Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Level | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Critical (P0) | ${{ needs.critical.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| High Risk (P1) | ${{ needs.high-risk.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Domain Tests | ${{ needs.domain-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.critical.result }}" == "failure" ]; then
+            echo "**DEPLOYMENT BLOCKED** - Critical tests must pass before deployment." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          if [ "${{ needs.critical.result }}" == "success" ]; then
+            echo "Critical tests passed - deployment is allowed." >> $GITHUB_STEP_SUMMARY
+          fi

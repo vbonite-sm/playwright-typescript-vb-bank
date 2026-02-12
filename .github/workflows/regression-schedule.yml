@@ -2,9 +2,21 @@ name: Scheduled Regression Tests
 
 on:
   schedule:
-    # Run full regression at 2 AM UTC every day
+    # Nightly: critical + high + medium at 2 AM UTC
     - cron: '0 2 * * *'
+    # Weekly: full suite (including low) on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
   workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Test scope'
+        required: true
+        default: 'nightly'
+        type: choice
+        options:
+          - nightly
+          - full
+          - critical-only
 
 permissions:
   contents: read
@@ -15,97 +27,229 @@ env:
   CI: true
 
 jobs:
-  full-regression:
-    name: Full Regression Suite
+  # Determine which tests to run based on schedule or input
+  setup:
+    name: Determine Scope
     runs-on: ubuntu-latest
+    outputs:
+      run_critical: ${{ steps.scope.outputs.run_critical }}
+      run_high: ${{ steps.scope.outputs.run_high }}
+      run_medium: ${{ steps.scope.outputs.run_medium }}
+      run_low: ${{ steps.scope.outputs.run_low }}
+      scope_label: ${{ steps.scope.outputs.scope_label }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Determine test scope
+        id: scope
+        run: |
+          SCOPE="${{ github.event.inputs.scope }}"
+          CRON="${{ github.event.schedule }}"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+          # Weekly cron or full manual
+          if [ "$CRON" == "0 3 * * 0" ] || [ "$SCOPE" == "full" ]; then
+            echo "run_critical=true" >> $GITHUB_OUTPUT
+            echo "run_high=true" >> $GITHUB_OUTPUT
+            echo "run_medium=true" >> $GITHUB_OUTPUT
+            echo "run_low=true" >> $GITHUB_OUTPUT
+            echo "scope_label=Full Suite" >> $GITHUB_OUTPUT
+          # Critical only
+          elif [ "$SCOPE" == "critical-only" ]; then
+            echo "run_critical=true" >> $GITHUB_OUTPUT
+            echo "run_high=false" >> $GITHUB_OUTPUT
+            echo "run_medium=false" >> $GITHUB_OUTPUT
+            echo "run_low=false" >> $GITHUB_OUTPUT
+            echo "scope_label=Critical Only" >> $GITHUB_OUTPUT
+          # Nightly (default)
+          else
+            echo "run_critical=true" >> $GITHUB_OUTPUT
+            echo "run_high=true" >> $GITHUB_OUTPUT
+            echo "run_medium=true" >> $GITHUB_OUTPUT
+            echo "run_low=false" >> $GITHUB_OUTPUT
+            echo "scope_label=Nightly (P0-P2)" >> $GITHUB_OUTPUT
+          fi
+
+  critical:
+    name: Critical (P0)
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.run_critical == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
-
-      - name: Run full regression tests
-        run: npm run test:ci:regression
+      - name: Run critical tests
+        run: npm run test:critical
         continue-on-error: true
 
-      - name: Test Summary
-        if: always()
-        run: |
-          echo "## 🧪 Scheduled Regression Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f test-results/junit-report.xml ]; then
-            TESTS=$(grep -oP 'tests="\K[0-9]+' test-results/junit-report.xml | head -1)
-            FAILURES=$(grep -oP 'failures="\K[0-9]+' test-results/junit-report.xml | head -1)
-            ERRORS=$(grep -oP 'errors="\K[0-9]+' test-results/junit-report.xml | head -1)
-            SKIPPED=$(grep -oP 'skipped="\K[0-9]+' test-results/junit-report.xml | head -1)
-            TIME=$(grep -oP 'time="\K[0-9.]+' test-results/junit-report.xml | head -1)
-            PASSED=$((TESTS - FAILURES - ERRORS - SKIPPED))
-            if [ "$FAILURES" -eq 0 ] && [ "$ERRORS" -eq 0 ]; then
-              echo "### ✅ All tests passed!" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "### ❌ Some tests failed" >> $GITHUB_STEP_SUMMARY
-            fi
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
-            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| ✅ Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
-            echo "| ❌ Failed | $FAILURES |" >> $GITHUB_STEP_SUMMARY
-            echo "| 💥 Errors | $ERRORS |" >> $GITHUB_STEP_SUMMARY
-            echo "| ⏭️ Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
-            echo "| 📊 Total | $TESTS |" >> $GITHUB_STEP_SUMMARY
-            echo "| ⏱️ Duration | ${TIME}s |" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            FAILED_NAMES=$(grep -B1 '<failure' test-results/junit-report.xml | grep -oP 'name="\K[^"]+' | head -20)
-            if [ -n "$FAILED_NAMES" ]; then
-              echo "<details><summary>Failed Tests</summary>" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              echo "$FAILED_NAMES" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              echo "</details>" >> $GITHUB_STEP_SUMMARY
-            fi
-          else
-            echo "⚠️ No JUnit report found at test-results/junit-report.xml" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Upload HTML report
+      - name: Upload results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: regression-report-${{ github.run_number }}
-          path: playwright-report/
-          retention-days: 30
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: regression-results-${{ github.run_number }}
-          path: test-results/
+          name: nightly-critical-results
+          path: |
+            playwright-report/
+            test-results/
           retention-days: 14
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Nightly Critical Results
+          path: test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+  high-risk:
+    name: High Risk (P1)
+    runs-on: ubuntu-latest
+    needs: [setup, critical]
+    if: needs.setup.outputs.run_high == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+
+      - name: Run high-risk tests
+        run: npm run test:high
+        continue-on-error: true
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-high-risk-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Nightly High Risk Results
+          path: test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+  medium-risk:
+    name: Medium Risk (P2)
+    runs-on: ubuntu-latest
+    needs: [setup, high-risk]
+    if: needs.setup.outputs.run_medium == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+
+      - name: Run medium-risk tests
+        run: npm run test:medium
+        continue-on-error: true
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-medium-risk-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Nightly Medium Risk Results
+          path: test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+  low-risk:
+    name: Low Risk (P3)
+    runs-on: ubuntu-latest
+    needs: [setup, medium-risk]
+    if: needs.setup.outputs.run_low == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+
+      - name: Run low-risk tests
+        run: npm run test:low
+        continue-on-error: true
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-low-risk-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Nightly Low Risk Results
+          path: test-results/**/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+  summary:
+    name: Nightly Summary
+    runs-on: ubuntu-latest
+    needs: [setup, critical, high-risk, medium-risk, low-risk]
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Scheduled Regression: ${{ needs.setup.outputs.scope_label }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Risk Level | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Critical (P0) | ${{ needs.critical.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| High (P1) | ${{ needs.high-risk.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Medium (P2) | ${{ needs.medium-risk.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Low (P3) | ${{ needs.low-risk.result }} |" >> $GITHUB_STEP_SUMMARY
 
   notify-on-failure:
     name: Notify on Failure
     runs-on: ubuntu-latest
-    needs: full-regression
+    needs: [critical, high-risk, medium-risk]
     if: failure()
     steps:
       - name: Create failure summary
         run: |
-          echo "## ❌ Regression Tests Failed" >> $GITHUB_STEP_SUMMARY
+          echo "## Regression Tests Failed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The scheduled regression test run failed." >> $GITHUB_STEP_SUMMARY
+          echo "The scheduled regression test run had failures." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Level | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Critical | ${{ needs.critical.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| High | ${{ needs.high-risk.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Medium | ${{ needs.medium-risk.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Run:** [${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Please investigate the test failures." >> $GITHUB_STEP_SUMMARY
+          echo "Investigate the test failures." >> $GITHUB_STEP_SUMMARY
