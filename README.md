@@ -1,10 +1,8 @@
 # VB Bank - Playwright Test Automation Framework
 
-![Risk-Based Tests](https://github.com/<owner>/<repo>/actions/workflows/risk-based.yml/badge.svg)
-![Playwright Tests](https://github.com/<owner>/<repo>/actions/workflows/playwright.yml/badge.svg)
-![Nightly Regression](https://github.com/<owner>/<repo>/actions/workflows/regression-schedule.yml/badge.svg)
-
-> Replace `<owner>/<repo>` above with the actual GitHub repository path (e.g. `myorg/playwright-typescript-vb-bank`).
+![Risk-Based Tests](https://github.com/vbonite-sm/playwright-typescript-vb-bank/actions/workflows/risk-based.yml/badge.svg)
+![Playwright Tests](https://github.com/vbonite-sm/playwright-typescript-vb-bank/actions/workflows/playwright.yml/badge.svg)
+![Nightly Regression](https://github.com/vbonite-sm/playwright-typescript-vb-bank/actions/workflows/regression-schedule.yml/badge.svg)
 
 A production-grade Playwright + TypeScript test automation framework for the [VB Bank Demo](https://vb-bank-demo.vercel.app/) application.
 
