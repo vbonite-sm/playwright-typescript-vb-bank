@@ -18,8 +18,8 @@ export default defineConfig({
     ['junit', { outputFile: 'test-results/junit-report.xml' }],
     ['./src/reporters/json-log.reporter.ts'],
     ['qa-sentinel', {
-      outputFile: 'test-results/qa-sentinel-report.html',
-      historyFile: 'test-history.json',
+      outputFile: path.resolve(__dirname, 'test-results/qa-sentinel-report.html'),
+      historyFile: path.resolve(__dirname, 'test-history.json'),
       maxHistoryRuns: 20,
       runId: process.env.GITHUB_RUN_ID,
       filterPwApiSteps: true,
