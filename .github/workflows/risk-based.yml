@@ -57,10 +57,21 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Restore test history
+        uses: actions/cache@v4
+        with:
+          path: test-history.json
+          key: test-history-critical-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            test-history-critical-${{ github.ref_name }}-
+            test-history-critical-
+
       - name: Run critical tests
         id: test
         run: npm run test:critical
         continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -149,9 +160,20 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Restore test history
+        uses: actions/cache@v4
+        with:
+          path: test-history.json
+          key: test-history-high-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            test-history-high-${{ github.ref_name }}-
+            test-history-high-
+
       - name: Run high-risk tests
         run: npm run test:high
         continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Upload report
         uses: actions/upload-artifact@v4
@@ -245,9 +267,20 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Restore test history
+        uses: actions/cache@v4
+        with:
+          path: test-history.json
+          key: test-history-${{ matrix.domain }}-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            test-history-${{ matrix.domain }}-${{ github.ref_name }}-
+            test-history-${{ matrix.domain }}-
+
       - name: Run ${{ matrix.domain }} tests
         run: npm run ${{ matrix.script }}
         continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Upload report
         uses: actions/upload-artifact@v4

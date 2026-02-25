@@ -81,9 +81,20 @@ jobs:
       - run: npm ci
       - run: npx playwright install chromium --with-deps
 
+      - name: Restore test history
+        uses: actions/cache@v4
+        with:
+          path: test-history.json
+          key: test-history-critical-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            test-history-critical-${{ github.ref_name }}-
+            test-history-critical-
+
       - name: Run critical tests
         run: npm run test:critical
         continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -118,9 +129,20 @@ jobs:
       - run: npm ci
       - run: npx playwright install chromium --with-deps
 
+      - name: Restore test history
+        uses: actions/cache@v4
+        with:
+          path: test-history.json
+          key: test-history-high-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            test-history-high-${{ github.ref_name }}-
+            test-history-high-
+
       - name: Run high-risk tests
         run: npm run test:high
         continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -155,9 +177,20 @@ jobs:
       - run: npm ci
       - run: npx playwright install chromium --with-deps
 
+      - name: Restore test history
+        uses: actions/cache@v4
+        with:
+          path: test-history.json
+          key: test-history-medium-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            test-history-medium-${{ github.ref_name }}-
+            test-history-medium-
+
       - name: Run medium-risk tests
         run: npm run test:medium
         continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -192,9 +225,20 @@ jobs:
       - run: npm ci
       - run: npx playwright install chromium --with-deps
 
+      - name: Restore test history
+        uses: actions/cache@v4
+        with:
+          path: test-history.json
+          key: test-history-low-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            test-history-low-${{ github.ref_name }}-
+            test-history-low-
+
       - name: Run low-risk tests
         run: npm run test:low
         continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Upload results
         uses: actions/upload-artifact@v4

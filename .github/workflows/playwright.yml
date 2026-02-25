@@ -49,9 +49,20 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Restore test history
+        uses: actions/cache@v4
+        with:
+          path: test-history.json
+          key: test-history-smoke-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            test-history-smoke-${{ github.ref_name }}-
+            test-history-smoke-
+
       - name: Run smoke tests
         run: npm run test:ci:smoke
         continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
@@ -141,9 +152,20 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Restore test history
+        uses: actions/cache@v4
+        with:
+          path: test-history.json
+          key: test-history-e2e-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            test-history-e2e-${{ github.ref_name }}-
+            test-history-e2e-
+
       - name: Run E2E tests
         run: npm run test:e2e
         continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
@@ -231,9 +253,20 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Restore test history
+        uses: actions/cache@v4
+        with:
+          path: test-history.json
+          key: test-history-regression-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            test-history-regression-${{ github.ref_name }}-
+            test-history-regression-
+
       - name: Run regression tests
         run: npm run test:ci:regression
         continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
@@ -321,9 +354,20 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Restore test history
+        uses: actions/cache@v4
+        with:
+          path: test-history.json
+          key: test-history-api-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            test-history-api-${{ github.ref_name }}-
+            test-history-api-
+
       - name: Run API tests
         run: npm run test:api
         continue-on-error: true
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v4

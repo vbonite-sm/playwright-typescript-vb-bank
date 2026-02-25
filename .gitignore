@@ -8,3 +8,5 @@ blob-report/
 playwright/.cache/
 storage-state/
 test-logs/
+test-history.json
+docs/
