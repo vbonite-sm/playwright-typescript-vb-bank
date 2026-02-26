@@ -71,6 +71,11 @@ jobs:
           path: test-history.json
           key: test-history-smoke-${{ github.ref_name }}-${{ github.run_id }}
 
+      - name: Add Pages index redirect
+        if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          echo '<!DOCTYPE html><meta http-equiv="refresh" content="0; url=qa-sentinel-report.html">' > test-results/index.html
+
       - name: Upload qa-sentinel report to Pages
         uses: actions/upload-pages-artifact@v3
         if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
