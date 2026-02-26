@@ -22,6 +22,7 @@
     "test:ui-only": "npx playwright test --project=chromium --project=admin --project=auth",
     "test:api-only": "npx playwright test --grep \"@api\"",
     "report": "npx playwright show-report",
+    "report:sentinel": "npx qa-sentinel-serve test-results/qa-sentinel-report.html",
     "test:ci": "npx playwright test",
     "test:ci:smoke": "npx playwright test --grep \"@smoke\"",
     "test:ci:regression": "npx playwright test --grep \"@regression\"",
@@ -47,7 +48,7 @@
     "@playwright/test": "^1.58.1",
     "@types/node": "^25.2.1",
     "dotenv": "^17.2.4",
-    "qa-sentinel": "file:../../../AppData/Local/Temp/qa-sentinel-build",
+    "qa-sentinel": "github:vbonite-sm/qa-sentinel",
     "typescript": "^5.9.3"
   }
 }
