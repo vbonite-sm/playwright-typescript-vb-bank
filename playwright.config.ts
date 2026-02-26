@@ -22,7 +22,6 @@ export default defineConfig({
       historyFile: path.resolve(__dirname, 'test-history.json'),
       maxHistoryRuns: 20,
       runId: process.env.GITHUB_RUN_ID,
-      filterPwApiSteps: true,
       networkLogFilter: 'vb-bank-demo.vercel.app',
       networkLogExcludeAssets: true,
     }],
@@ -31,8 +30,8 @@ export default defineConfig({
 
   use: {
     baseURL: process.env.BASE_URL || 'https://vb-bank-demo.vercel.app',
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
+    trace: process.env.CI ? 'retain-on-failure' : 'on',
+    screenshot: process.env.CI ? 'only-on-failure' : 'on',
     video: 'retain-on-failure',
     actionTimeout: Number.parseInt(process.env.DEFAULT_TIMEOUT || '30000'),
     navigationTimeout: Number.parseInt(process.env.NAVIGATION_TIMEOUT || '30000'),
