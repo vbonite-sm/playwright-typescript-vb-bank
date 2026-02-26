@@ -71,17 +71,6 @@ jobs:
           path: test-history.json
           key: test-history-smoke-${{ github.ref_name }}-${{ github.run_id }}
 
-      - name: Add Pages index redirect
-        if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: |
-          echo '<!DOCTYPE html><meta http-equiv="refresh" content="0; url=qa-sentinel-report.html">' > test-results/index.html
-
-      - name: Upload qa-sentinel report to Pages
-        uses: actions/upload-pages-artifact@v3
-        if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
-        with:
-          path: test-results/
-
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
         if: always()
@@ -451,19 +440,3 @@ jobs:
           else
             echo "⚠️ No JUnit report found at test-results/junit-report.xml" >> $GITHUB_STEP_SUMMARY
           fi
-
-  deploy-report:
-    name: Deploy QA Sentinel Report
-    runs-on: ubuntu-latest
-    needs: [smoke-tests]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
